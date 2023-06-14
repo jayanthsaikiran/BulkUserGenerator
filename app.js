@@ -7,14 +7,30 @@ admin.initializeApp({
 
 const createUser = async (user) => {
     try {
-        await admin.auth().createUser({
-            email: user.email,
-            password: user.password
+        const { email, password, firstName, lastName, name, docname, gender, age, mobileNumber, userId } = user;
+    
+        // Create the user in Firebase Authentication
+        const userRecord = await admin.auth().createUser({
+          email,
+          password,
+          uid: userId
         });
-        console.log(`User created: ${user.email}`);
-    } catch (error) {
-        console.error(`Error creating user ${user.email}: ${error}`);
-    }
+    
+        // Set the custom claims for the user
+        await admin.auth().setCustomUserClaims(userRecord.uid, {
+          firstName,
+          lastName,
+          name,
+          docname,
+          gender,
+          age,
+          mobileNumber,
+        });
+    
+        console.log('User created:', userRecord.uid);
+      } catch (error) {
+        console.error('Error creating user:', error);
+      }
 };
 
 
@@ -54,5 +70,28 @@ const createBulkUsers = async () => {
     }
 };
 
+async function getUserDetails() {
+  try {
+    const listUsersResult = await admin.auth().listUsers();
+    listUsersResult.users.forEach((userRecord) => {
+      console.log('User ID:', userRecord.uid);
+      console.log('Email:', userRecord.email);
+      console.log('First Name:', userRecord.customClaims.firstName);
+      console.log('Last Name:', userRecord.customClaims.lastName);
+      console.log('Name:', userRecord.customClaims.name);
+      console.log('Doctor Name:', userRecord.customClaims.docname);
+      console.log('Gender:', userRecord.customClaims.gender);
+      console.log('Age:', userRecord.customClaims.age);
+      console.log('Mobile Number:', userRecord.customClaims.mobileNumber);
+      console.log('---');
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+  }
+}
+
+// Call the function to fetch and display the user details
+getUserDetails();
+
 // deleteAllUsers();
-createBulkUsers();
+// createBulkUsers();
